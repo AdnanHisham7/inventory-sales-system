@@ -13,7 +13,6 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
   "dependencies": {
     "bcrypt": "^5.1.1",
     "body-parser": "^1.20.3",
@@ -27,9 +26,10 @@
     "pg-hstore": "^2.3.4",
     "qrcode": "^1.5.4",
     "razorpay": "^2.9.6",
-    "sequelize": "^6.37.5"
+    "sequelize": "^6.37.6"
   },
   "devDependencies": {
     "nodemon": "^3.1.9"
-  }
+  },
+  "description": ""
 }

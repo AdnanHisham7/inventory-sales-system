@@ -42,6 +42,7 @@ const LoginForm: React.FC = () => {
       // Redirect user after login (e.g., to dashboard)
       window.location.href = "/dashboard";
     } catch (err: any) {
+      console.log(err)
       toast.warning(err.response?.data?.message || "Login failed. Try again.");
     }
   };
