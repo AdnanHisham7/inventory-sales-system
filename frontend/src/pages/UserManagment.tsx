@@ -1,4 +1,8 @@
-import React, { useState } from 'react';
+import axios from "axios";
+import React, { useEffect, useState } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faToggleOn, faToggleOff } from "@fortawesome/free-solid-svg-icons";
+import { toast } from "sonner";
 
 // Reusable Modal Component
 interface ModalProps {
@@ -7,13 +11,26 @@ interface ModalProps {
   children: React.ReactNode;
 }
 
+interface Supplier {
+  id: number;
+  name: string;
+  contactPerson: string;
+  email: string;
+  phone: string;
+  address: string;
+  active: boolean;
+}
+
 const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg p-6 w-full max-w-md">
-        <button onClick={onClose} className="float-right text-gray-500 hover:text-gray-700">
+        <button
+          onClick={onClose}
+          className="float-right text-gray-500 hover:text-gray-700"
+        >
           &times;
         </button>
         {children}
@@ -24,30 +41,106 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
 
 // User Management Page
 const UserManagement: React.FC = () => {
-  const [isPasswordResetModalOpen, setIsPasswordResetModalOpen] = useState(false);
+  const [isPasswordResetModalOpen, setIsPasswordResetModalOpen] =
+    useState(false);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
-  const [twoFAEnabled, setTwoFAEnabled] = useState<{ [key: number]: boolean }>({});
-  const [activeSessions, setActiveSessions] = useState<{ [key: number]: string[] }>({});
+  const [twoFAEnabled, setTwoFAEnabled] = useState<{ [key: number]: boolean }>(
+    {}
+  );
+  const [activeSessions, setActiveSessions] = useState<{
+    [key: number]: string[];
+  }>({});
+
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [isBlocked, setIsBlocked] = useState(true);
+
+  useEffect(() => {
+    const fetchSuppliers = async () => {
+      const response = await axios.get("http://localhost:5000/api/supplier");
+      setSuppliers(response.data.suppliers);
+    };
+    fetchSuppliers();
+  }, []);
+
+  const token = localStorage.getItem("token");
+
+  const handleToggle = async (supplierId) => {
+    try {
+      const token = localStorage.getItem("token");
+      const supplier = suppliers.find((s) => s.id === supplierId);
+  
+      if (!supplier) {
+        toast.error("Supplier not found");
+        return;
+      }
+  
+      // Toggle the `active` status locally
+      const updatedSupplier = { ...suppliers, active: !supplier.active };
+  
+      // Send the request to update the supplier on the backend
+      const response = await axios.put(
+        `http://localhost:5000/api/supplier/${supplierId}/toggle-block`,
+        { active: updatedSupplier.active }, // Send the new `active` status
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+  
+      if (response.status === 200) {
+        // Update the local state to reflect the change
+        setSuppliers((prevSuppliers) =>
+          prevSuppliers.map((s) =>
+            s.id === supplierId ? { ...s, active: updatedSupplier.active } : s
+          )
+        );
+  
+        toast.success(
+          response.data.message ||
+            `Supplier ${updatedSupplier.active ? "activated" : "blocked"} successfully`
+        );
+      }
+    } catch (error) {
+      console.error("Error toggling block status:", error);
+      toast.error("Failed to toggle supplier status");
+    }
+  };
 
   // Dummy user data
   const users = [
-    { id: 1, name: 'John Doe', email: 'john@example.com', role: 'Admin' },
-    { id: 2, name: 'Jane Smith', email: 'jane@example.com', role: 'Editor' },
-    { id: 3, name: 'Alice Johnson', email: 'alice@example.com', role: 'Viewer' },
+    { id: 1, name: "John Doe", email: "john@example.com", role: "Admin" },
+    { id: 2, name: "Jane Smith", email: "jane@example.com", role: "Editor" },
+    {
+      id: 3,
+      name: "Alice Johnson",
+      email: "alice@example.com",
+      role: "Viewer",
+    },
   ];
 
   // Dummy activity log data
   const activityLogs = [
-    { id: 1, userId: 1, action: 'Logged in', timestamp: '2023-10-01 10:00 AM' },
-    { id: 2, userId: 2, action: 'Updated profile', timestamp: '2023-10-01 11:00 AM' },
-    { id: 3, userId: 3, action: 'Viewed dashboard', timestamp: '2023-10-01 12:00 PM' },
+    { id: 1, userId: 1, action: "Logged in", timestamp: "2023-10-01 10:00 AM" },
+    {
+      id: 2,
+      userId: 2,
+      action: "Updated profile",
+      timestamp: "2023-10-01 11:00 AM",
+    },
+    {
+      id: 3,
+      userId: 3,
+      action: "Viewed dashboard",
+      timestamp: "2023-10-01 12:00 PM",
+    },
   ];
 
   // Dummy role permissions matrix
   const rolePermissions = [
-    { role: 'Admin', permissions: ['Create', 'Read', 'Update', 'Delete'] },
-    { role: 'Editor', permissions: ['Create', 'Read', 'Update'] },
-    { role: 'Viewer', permissions: ['Read'] },
+    { role: "Admin", permissions: ["Create", "Read", "Update", "Delete"] },
+    { role: "Editor", permissions: ["Create", "Read", "Update"] },
+    { role: "Viewer", permissions: ["Read"] },
   ];
 
   // Handle password reset
@@ -68,7 +161,7 @@ const UserManagement: React.FC = () => {
   const manageSessions = (userId: number) => {
     setActiveSessions((prev) => ({
       ...prev,
-      [userId]: prev[userId] ? [] : ['Session 1', 'Session 2'], // Dummy session data
+      [userId]: prev[userId] ? [] : ["Session 1", "Session 2"], // Dummy session data
     }));
   };
 
@@ -90,7 +183,7 @@ const UserManagement: React.FC = () => {
             {rolePermissions.map((role) => (
               <tr key={role.role} className="border-t">
                 <td className="p-3">{role.role}</td>
-                <td className="p-3">{role.permissions.join(', ')}</td>
+                <td className="p-3">{role.permissions.join(", ")}</td>
               </tr>
             ))}
           </tbody>
@@ -111,7 +204,9 @@ const UserManagement: React.FC = () => {
           <tbody>
             {activityLogs.map((log) => (
               <tr key={log.id} className="border-t">
-                <td className="p-3">{users.find((user) => user.id === log.userId)?.name}</td>
+                <td className="p-3">
+                  {users.find((user) => user.id === log.userId)?.name}
+                </td>
                 <td className="p-3">{log.action}</td>
                 <td className="p-3">{log.timestamp}</td>
               </tr>
@@ -148,16 +243,18 @@ const UserManagement: React.FC = () => {
                   <button
                     onClick={() => toggleTwoFA(user.id)}
                     className={`${
-                      twoFAEnabled[user.id] ? 'text-green-500' : 'text-gray-500'
+                      twoFAEnabled[user.id] ? "text-green-500" : "text-gray-500"
                     } hover:text-green-700`}
                   >
-                    {twoFAEnabled[user.id] ? 'Disable 2FA' : 'Enable 2FA'}
+                    {twoFAEnabled[user.id] ? "Disable 2FA" : "Enable 2FA"}
                   </button>
                   <button
                     onClick={() => manageSessions(user.id)}
                     className="text-purple-500 hover:text-purple-700"
                   >
-                    {activeSessions[user.id] ? 'End Sessions' : 'Manage Sessions'}
+                    {activeSessions[user.id]
+                      ? "End Sessions"
+                      : "Manage Sessions"}
                   </button>
                 </td>
               </tr>
@@ -167,10 +264,14 @@ const UserManagement: React.FC = () => {
       </div>
 
       {/* Password Reset Modal */}
-      <Modal isOpen={isPasswordResetModalOpen} onClose={() => setIsPasswordResetModalOpen(false)}>
+      <Modal
+        isOpen={isPasswordResetModalOpen}
+        onClose={() => setIsPasswordResetModalOpen(false)}
+      >
         <h2 className="text-lg font-semibold mb-4">Reset Password</h2>
         <p className="text-gray-500 mb-4">
-          Are you sure you want to reset the password for user ID {selectedUserId}?
+          Are you sure you want to reset the password for user ID{" "}
+          {selectedUserId}?
         </p>
         <div className="flex justify-end space-x-4">
           <button
@@ -190,6 +291,44 @@ const UserManagement: React.FC = () => {
           </button>
         </div>
       </Modal>
+
+      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <h2 className="text-xl font-bold mb-4">Suppliers</h2>
+        <table className="w-full">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="p-3 text-left">Name</th>
+              <th className="p-3 text-left">Contact Person</th>
+              <th className="p-3 text-left">Email</th>
+              <th className="p-3 text-left">Phone</th>
+              <th className="p-3 text-left">Address</th>
+              <th className="p-3 text-left">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {suppliers.map((supplier) => (
+              <tr key={supplier.id} className="border-t">
+                {/* <td className="p-3">{users.find((user) => user.id === log.userId)?.name}</td> */}
+                <td className="p-3">{supplier.name}</td>
+                <td className="p-3">{supplier.contactPerson}</td>
+                <td className="p-3">{supplier.email}</td>
+                <td className="p-3">{supplier.phone}</td>
+                <td className="p-3">{supplier.address}</td>
+                <td className="p-3">
+                  <button onClick={() => handleToggle(supplier.id)}>
+                    <FontAwesomeIcon
+                      icon={supplier.active ? faToggleOn : faToggleOff}
+                      className={`text-2xl ${
+                        supplier.active ? "text-green-500" : "text-red-900"
+                      }`}
+                    />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
