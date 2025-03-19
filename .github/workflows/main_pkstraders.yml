@@ -34,7 +34,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: node-app
-          path: backend  # Upload only the backend folder!
+          path: ./backend  # Upload only the backend folder!
 
   deploy:
     runs-on: ubuntu-latest
