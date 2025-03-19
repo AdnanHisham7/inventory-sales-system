@@ -1,6 +1,3 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-
 name: Build and deploy Node.js app to Azure Web App - pkstraders
 
 on:
@@ -37,7 +34,7 @@ jobs:
           path: ./backend  # Upload only the backend folder!
 
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest  # Ensure you're using Windows for consistency
     needs: build
     environment:
       name: 'Production'
@@ -51,7 +48,8 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: node-app
-      
+          path: ./backend  # Ensure the backend folder is downloaded
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -65,4 +63,4 @@ jobs:
         with:
           app-name: 'pkstraders'
           slot-name: 'Production'
-          package: ./backend  # Deploy only the backend folder!
+          package: ./backend  # Use the correct path for the backend folder in Windows
