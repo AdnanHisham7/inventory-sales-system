@@ -1152,7 +1152,7 @@ const POSInterface: React.FC = () => {
             </div>
             <div className="flex flex-col sm:flex-row items-center gap-4 w-full">
               {/* Search Input Container */}
-              <div className="w-full sm:w-auto relative">
+               <div className="w-full sm:flex-1 sm:basis-3/4 relative" >
                 <input
                   ref={productSearchRef}
                   type="text"
@@ -1160,7 +1160,7 @@ const POSInterface: React.FC = () => {
                   onChange={(e) => setSearchTerm(e.target.value)}
                   onKeyDown={handleProductKeyDown}
                   placeholder="Search products by name or barcode"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent pl-10"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent pl-10"
                 />
                 <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-500">
                   <svg
@@ -1242,7 +1242,7 @@ const POSInterface: React.FC = () => {
                 )}
               </div>
               {/* Barcode Scan Button Container */}
-              <div className="w-full sm:w-auto relative">
+               <div className="w-full sm:w-auto sm:basis-1/4 relative">
                 <input
                   ref={barcodeInputRef}
                   type="text"
@@ -1278,7 +1278,7 @@ const POSInterface: React.FC = () => {
                     ></path>
                   </svg>
                   <span>
-                    {scanning ? "Scanning... (Click to stop)" : "Scan Barcode"}
+                    {scanning ? "Scanning.. (Press to stop)" : "Scan Barcode"}
                   </span>
                   <span className="ml-1 bg-blue-800 text-white text-xs px-1.5 py-0.5 rounded">
                     S
